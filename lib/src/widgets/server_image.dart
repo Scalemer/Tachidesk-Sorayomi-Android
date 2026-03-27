@@ -17,6 +17,7 @@ import '../constants/endpoints.dart';
 import '../constants/enum.dart';
 import '../features/settings/presentation/server/widget/client/server_port_tile/server_port_tile.dart';
 import '../features/settings/presentation/server/widget/client/server_url_tile/server_url_tile.dart';
+import '../features/settings/presentation/server/widget/client/tunnel_url_tile/tunnel_url_tile.dart';
 import '../features/settings/presentation/server/widget/credential_popup/credentials_popup.dart';
 import '../global_providers/global_providers.dart';
 import '../utils/extensions/custom_extensions.dart';
@@ -56,6 +57,7 @@ class ServerImage extends HookConsumerWidget {
       port: ref.watch(serverPortProvider),
       addPort: ref.watch(serverPortToggleProvider).ifNull(),
       appendApiToUrl: appendApiToUrl,
+      tunnelUrlEnabled: ref.watch(tunnelUrlEnabledProvider).ifNull(),
     )}"
         "$imageUrl";
 

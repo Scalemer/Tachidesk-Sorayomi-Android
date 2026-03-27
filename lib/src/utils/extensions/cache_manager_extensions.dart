@@ -13,6 +13,7 @@ import '../../constants/endpoints.dart';
 import '../../constants/enum.dart';
 import '../../features/settings/presentation/server/widget/client/server_port_tile/server_port_tile.dart';
 import '../../features/settings/presentation/server/widget/client/server_url_tile/server_url_tile.dart';
+import '../../features/settings/presentation/server/widget/client/tunnel_url_tile/tunnel_url_tile.dart';
 import '../../features/settings/presentation/server/widget/credential_popup/credentials_popup.dart';
 import '../../global_providers/global_providers.dart';
 import 'custom_extensions.dart';
@@ -27,6 +28,7 @@ extension CacheManagerExtension on CacheManager {
       port: ref.read(serverPortProvider),
       addPort: ref.read(serverPortToggleProvider).ifNull(),
       appendApiToUrl: appendApiToUrl,
+      tunnelUrlEnabled: ref.read(tunnelUrlEnabledProvider).ifNull(),
     )}"
         "$url";
     return await getSingleFile(

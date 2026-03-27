@@ -24,6 +24,7 @@ import '../features/migration/domain/migration_models.dart';
 import '../features/migration/presentation/screens/migration_global_search_screen.dart';
 import '../features/migration/presentation/screens/migration_preview_screen.dart';
 import '../features/migration/presentation/screens/migration_progress_screen.dart';
+import '../features/app_lock/presentation/app_lock_screen.dart';
 import '../features/migration/presentation/screens/migration_search_screen.dart';
 import '../features/migration/presentation/screens/migration_source_selection_screen.dart';
 import '../features/quick_open/presentation/search_stack/search_stack_screen.dart';
@@ -230,14 +231,16 @@ class QuickSearchRoute extends ShellRouteData {
 
   @override
   Widget builder(context, state, navigator) =>
-      AnnotatedRegion<SystemUiOverlayStyle>(
-        value: FlexColorScheme.themedSystemNavigationBar(
-          context,
-          systemNavBarStyle: FlexSystemNavBarStyle.background,
-          useDivider: false,
-          opacity: 0.60,
+      AppLockScreen(
+        child: AnnotatedRegion<SystemUiOverlayStyle>(
+          value: FlexColorScheme.themedSystemNavigationBar(
+            context,
+            systemNavBarStyle: FlexSystemNavBarStyle.background,
+            useDivider: false,
+            opacity: 0.60,
+          ),
+          child: SearchStackScreen(child: navigator),
         ),
-        child: SearchStackScreen(child: navigator),
       );
 }
 

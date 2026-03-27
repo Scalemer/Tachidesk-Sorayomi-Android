@@ -16,6 +16,7 @@ abstract class Endpoints {
     bool appendApiToUrl = true,
     bool isGraphQl = false,
     bool isWebsocket = false,
+    bool tunnelUrlEnabled = false,
   }) {
     String primary = baseUrl ?? DBKeys.serverUrl.initial;
     if (isWebsocket) {
@@ -23,7 +24,7 @@ abstract class Endpoints {
     }
     Uri url = Uri.tryParse(primary) ?? Uri.parse(DBKeys.serverUrl.initial);
 
-    if (port != null && addPort) {
+    if (!tunnelUrlEnabled && port != null && addPort) {
       url = url.replace(port: port);
     }
     if (appendApiToUrl) {
