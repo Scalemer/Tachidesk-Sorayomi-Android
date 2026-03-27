@@ -17,6 +17,7 @@ import '../constants/enum.dart';
 import '../features/settings/presentation/general/timeout_settings/timeout_settings_section.dart';
 import '../features/settings/presentation/server/widget/client/server_port_tile/server_port_tile.dart';
 import '../features/settings/presentation/server/widget/client/server_url_tile/server_url_tile.dart';
+import '../features/settings/presentation/server/widget/client/tunnel_url_tile/tunnel_url_tile.dart';
 import '../features/settings/presentation/server/widget/credential_popup/credentials_popup.dart';
 import '../utils/extensions/custom_extensions.dart';
 import '../utils/logger/logger_link.dart';
@@ -51,6 +52,7 @@ GraphQLClient graphQlClient(Ref ref) {
       port: ref.watch(serverPortProvider),
       addPort: ref.watch(serverPortToggleProvider).ifNull(),
       isGraphQl: true,
+      tunnelUrlEnabled: ref.watch(tunnelUrlEnabledProvider) ?? DBKeys.tunnelUrlEnabled.initial,
     ),
     followRedirects: true,
     // httpResponseDecoder: httpResponseDecoder,
@@ -91,6 +93,7 @@ GraphQLClient graphQlSubscriptionClient(Ref ref) {
         addPort: ref.watch(serverPortToggleProvider).ifNull(),
         isGraphQl: true,
         isWebsocket: true,
+        tunnelUrlEnabled: ref.watch(tunnelUrlEnabledProvider) ?? DBKeys.tunnelUrlEnabled.initial,
       ),
       subProtocol: GraphQLProtocol.graphqlTransportWs);
   if (authType == AuthType.basic && credentials.isNotBlank) {

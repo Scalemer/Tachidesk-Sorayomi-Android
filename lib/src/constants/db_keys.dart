@@ -60,6 +60,8 @@ enum DBKeys {
   serverRequestTimeout(5000), // milliseconds
   autoRefreshOnTimeout(false),
   autoRefreshRetryDelay(1000), // milliseconds
+  tunnelUrlEnabled(false),
+  appLockEnabled(false),
   ;
 
   const DBKeys(this.initial);
