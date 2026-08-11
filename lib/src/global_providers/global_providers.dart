@@ -37,14 +37,6 @@ GraphQLClient graphQlClient(Ref ref) {
   final retryDelayMs = ref.watch(autoRefreshRetryDelayProvider) ??
       DBKeys.autoRefreshRetryDelay.initial as int;
 
-  final effectiveTimeoutMs = autoRetry
-      ? (retryDelayMs < timeoutMs ? retryDelayMs : timeoutMs)
-      : timeoutMs;
-
-  final retryCount = autoRetry
-      ? ((timeoutMs / retryDelayMs).ceil() - 1).clamp(0, 10)
-      : 0; // cap at 10 retries for safety
-
   Link link = HttpLink(
     Endpoints.baseApi(
       baseUrl: ref.watch(serverUrlProvider) ?? DBKeys.serverUrl.initial,
@@ -56,8 +48,8 @@ GraphQLClient graphQlClient(Ref ref) {
     // httpResponseDecoder: httpResponseDecoder,
     defaultHeaders: {'Content-Type': 'application/json; charset=utf-8'},
     httpClient: TimeoutHttpClient(
-      Duration(milliseconds: effectiveTimeoutMs),
-      retries: retryCount,
+      Duration(milliseconds: timeoutMs),
+      retries: autoRetry ? 1 : 0,
       retryDelay: Duration(milliseconds: retryDelayMs),
     ),
   );

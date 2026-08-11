@@ -57,9 +57,9 @@ enum DBKeys {
   historyEnabled(true),
   historyRetentionDays(90),
   // Timeout Settings
-  serverRequestTimeout(5000), // milliseconds
-  autoRefreshOnTimeout(false),
-  autoRefreshRetryDelay(1000), // milliseconds
+  serverRequestTimeout(30000), // milliseconds
+  autoRefreshOnTimeout(true),
+  autoRefreshRetryDelay(1500), // milliseconds
   ;
 
   const DBKeys(this.initial);

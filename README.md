@@ -6,7 +6,7 @@
 
 <div align="center">
 
-[![Platform](https://img.shields.io/badge/platform-Android%20%7C%20iOS%20%7C%20Linux%20%7C%20Windows%20%7C%20MacOS%20%7C%20Web-lightgrey)][release]
+[![Platform](https://img.shields.io/badge/platform-Android-lightgrey)][release]
 [![Discord](https://img.shields.io/discord/801021177333940224.svg?label=discord&labelColor=7289da&color=2c2f33&style=flat)](https://discord.gg/DDZdqZWaHA)
 
 </div>
@@ -15,8 +15,8 @@
 
 [![GitHub Stars](https://img.shields.io/github/stars/Suwayomi/Tachidesk-Sorayomi)](https://github.com/Suwayomi/Tachidesk-Sorayomi)
 [![GitHub License](https://img.shields.io/github/license/Suwayomi/Tachidesk-Sorayomi)](https://github.com/Suwayomi/Tachidesk-Sorayomi/blob/main/LICENSE)
-![CI](https://github.com/Suwayomi/Tachidesk-Sorayomi/actions/workflows/publish.yml/badge.svg)
-[![stable release](https://img.shields.io/github/release/Suwayomi/Tachidesk-Sorayomi.svg?maxAge=3600&label=download)](https://github.com/Suwayomi/Tachidesk-Sorayomi/releases)
+[![Android](https://github.com/Scalemer/Tachidesk-Sorayomi-Android/actions/workflows/android.yml/badge.svg)](https://github.com/Scalemer/Tachidesk-Sorayomi-Android/actions/workflows/android.yml)
+[![stable release](https://img.shields.io/github/release/Scalemer/Tachidesk-Sorayomi-Android.svg?maxAge=3600&label=download)](https://github.com/Scalemer/Tachidesk-Sorayomi-Android/releases)
 
 </div>
 
@@ -27,6 +27,22 @@ A free and open source manga reader based on <a href="https://flutter.dev/">Flut
 Sorayomi need to connect with an already hosted server.</br></br>
 Sorayomi supports Linux, Windows, MacOS, Web, iOS and Android.
 </p>
+
+---
+
+## Scalemer Android fork
+
+This repository is an Android-focused personal fork of
+[Suwayomi/Tachidesk-Sorayomi](https://github.com/Suwayomi/Tachidesk-Sorayomi).
+It keeps the upstream last-page swipe-to-next-chapter behavior and adds the
+chapter-loading fix recovered from the earlier iOS fork:
+
+- If the first chapter-page response is empty, wait 1.5 seconds and retry once.
+- Use a 30-second request timeout by default, with one timeout retry enabled.
+- Build and test installable Android APKs with the dedicated Android workflow.
+
+The exact audit of the earlier fork is recorded in [CUSTOM_CHANGES.md](CUSTOM_CHANGES.md).
+The app still requires a running Suwayomi Server.
 
 ---
 
@@ -57,53 +73,14 @@ These are the versions of [Suwayomi-Server][suwayomi-server] that Sorayomi suppo
 
 ### Android
 
-Download *-android-all.apk file from latest release [the releases section][release].
+Run the [Android workflow](https://github.com/Scalemer/Tachidesk-Sorayomi-Android/actions/workflows/android.yml)
+and download its artifact. The `all.apk` build works on all supported Android
+architectures; the ABI-specific APKs are smaller.
 
-
-### iOS
-
-- Download the latest .ipa file from [the releases section][release]
-- use [AltStore](https://altstore.io/) to install Sorayomi in ios.
-
-### Windows
-
-Download the latest .msi file from [the releases section][release].
-
-if you use WINGET, you can run
-```
-winget install tachidesk-sorayomi
-```
-
-### MacOS
-
-- Download the *-macos-x64.zip from the latest release [the releases section][release]
-- Extract the file.
-- Drag and drop the extracted app file to applications folder in finder.
-
-if you use HomeBrew, you can run
-```
-brew install --cask tachidesk-sorayomi
-```
-
-### Debian based Linux
-
-Download the latest deb release from [the releases section][release].
-
-### Arch based Linux
-
-Download the latest release from [the aur](https://aur.archlinux.org/packages/tachidesk-sorayomi-bin).
-
-If you use yay, you can run
-```
-yay -S tachidesk-sorayomi-bin
-```
-inside a terminal window.
-
-### Web
-
-Download the latest web.zip file from [the releases section][release].
-
-- Sorayomi-web deployed in GitHub pages. You can check out [Sorayomi here](https://suwayomi.github.io/Tachidesk-Sorayomi/).
+Without repository signing secrets, CI signs the APK with a temporary debug
+key. Configure the four secrets documented below before distributing builds
+that must upgrade one another. For official builds on other platforms, use the
+[upstream releases](https://github.com/Suwayomi/Tachidesk-Sorayomi/releases).
 
 
 ## Post installation
@@ -119,15 +96,16 @@ These instructions will get you a copy of the project up and running on your loc
 You can install Flutter & Dart from [Official website](https://docs.flutter.dev/get-started/install)
 
   - Dart sdk
-  - Flutter - Channel Stable
+  - Flutter 3.32.5
+  - Java 17 for Android builds
 
 ### Building
 
 1.  Clone the repository:
 
 ```
-  $ git clone https://github.com/Suwayomi/Tachidesk-Sorayomi.git
-  $ cd Tachidesk-Sorayomi/
+  $ git clone https://github.com/Scalemer/Tachidesk-Sorayomi-Android.git
+  $ cd Tachidesk-Sorayomi-Android/
 ```
 2.  You can install all dependencies by running this command in terminal:
 
@@ -135,16 +113,25 @@ You can install Flutter & Dart from [Official website](https://docs.flutter.dev/
   $ flutter pub get
 ```
 
-3.  Now enter the following command to start debugging the app:
+3. Generate sources and run the tests:
 
 ```
+  $ flutter gen-l10n
+  $ dart run build_runner build --delete-conflicting-outputs
+  $ flutter test
+```
+
+4. Build an Android APK or start debugging:
+
+```
+  $ flutter build apk --release
   $ flutter run
 ```
 
--  Localization generator
-```
-  $ flutter gen-l10n
-```
+For persistent release signing, add `android/key.properties` and a keystore as
+described in Flutter's Android deployment guide. CI accepts the following
+repository secrets: `PLAY_STORE_UPLOAD_KEY` (base64-encoded keystore),
+`KEYSTORE_KEY_ALIAS`, `KEYSTORE_STORE_PASSWORD`, and `KEYSTORE_KEY_PASSWORD`.
 
 - Pull-Request Suggestion
   - Install GitHooks after cloning the repo using `git config --local core.hooksPath .githooks`
@@ -195,6 +182,6 @@ You can obtain a copy of `Mozilla Public License v2.0` from https://mozilla.org/
     file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-[release]: https://github.com/Suwayomi/Tachidesk-Sorayomi/releases
+[release]: https://github.com/Scalemer/Tachidesk-Sorayomi-Android/releases
 [suwayomi-server]: https://github.com/Suwayomi/Suwayomi-Server
 [suwayomi-server-preview]: https://github.com/Suwayomi/Suwayomi-Server-preview/releases

@@ -21,8 +21,13 @@ import './__generated__/query.graphql.dart';
 part 'manga_book_repository.g.dart';
 
 class MangaBookRepository {
-  const MangaBookRepository(this.client);
+  const MangaBookRepository(
+    this.client, {
+    this.chapterPagesRetryDelay = const Duration(milliseconds: 1500),
+  });
+
   final GraphQLClient client;
+  final Duration chapterPagesRetryDelay;
 
   Future<MangaDto?> addMangaToLibrary(int mangaId) => client
       .mutate$UpdateManga(
@@ -132,15 +137,28 @@ class MangaBookRepository {
 
   Future<ChapterPagesDto?> getChapterPages({
     required int chapterId,
-  }) async =>
-      client
-          .mutate$GetChapterPages(
-            Options$Mutation$GetChapterPages(
-              variables: Variables$Mutation$GetChapterPages(
-                  input: Input$FetchChapterPagesInput(chapterId: chapterId)),
+  }) async {
+    Future<ChapterPagesDto?> fetchPages() => client
+        .mutate$GetChapterPages(
+          Options$Mutation$GetChapterPages(
+            variables: Variables$Mutation$GetChapterPages(
+              input: Input$FetchChapterPagesInput(chapterId: chapterId),
             ),
-          )
-          .getData((data) => data.fetchChapterPages);
+          ),
+        )
+        .getData((data) => data.fetchChapterPages);
+
+    final result = await fetchPages();
+    if (result?.pages.isNotEmpty ?? false) {
+      return result;
+    }
+
+    // Some Suwayomi sources return an empty page list while the first request
+    // warms the chapter cache. Retry once so the reader can recover without
+    // requiring the user to leave and reopen the chapter.
+    await Future<void>.delayed(chapterPagesRetryDelay);
+    return fetchPages();
+  }
 
   Future<void> putChapter({
     required int chapterId,
@@ -186,9 +204,125 @@ class MangaBookRepository {
           ),
         ),
       )
-      .getData((data) => data.fetchChapters?.chapters);
+      .getData((data) => data.fe…576 tokens truncated…initial,
+      port: ref.watch(serverPortProvider),
+      addPort: ref.watch(serverPortToggleProvider).ifNull(),
+      isGraphQl: true,
+    ),
+    followRedirects: true,
+    // httpResponseDecoder: httpResponseDecoder,
+    defaultHeaders: {'Content-Type': 'application/json; charset=utf-8'},
+    httpClient: TimeoutHttpClient(
+      Duration(milliseconds: timeoutMs),
+      retries: autoRetry ? 1 : 0,
+      retryDelay: Duration(milliseconds: retryDelayMs),
+    ),
+  );
+
+  // Auto retry is handled by TimeoutHttpClient retries instead of RetryLink
+
+  // Basic authentication link
+  if (authType == AuthType.basic && credentials.isNotBlank) {
+    final AuthLink authLink = AuthLink(getToken: () => credentials);
+    link = authLink.concat(link);
+  }
+
+  final loggerLink = LoggerLink();
+  return GraphQLClient(
+    link: loggerLink.concat(link),
+    defaultPolicies: DefaultPolicies(
+      query: Policies(fetch: FetchPolicy.noCache),
+    ),
+    cache: GraphQLCache(store: ref.watch(hiveStoreProvider)),
+  );
 }
 
 @riverpod
-MangaBookRepository mangaBookRepository(Ref ref) =>
-    MangaBookRepository(ref.watch(graphQlClientProvider));
+GraphQLClient graphQlSubscriptionClient(Ref ref) {
+  final authType = ref.watch(authTypeKeyProvider) ?? DBKeys.authType.initial;
+  final credentials = ref.watch(credentialsProvider);
+  Link link = WebSocketLink(
+      Endpoints.baseApi(
+        baseUrl: ref.watch(serverUrlProvider) ?? DBKeys.serverUrl.initial,
+        port: ref.watch(serverPortProvider),
+        addPort: ref.watch(serverPortToggleProvider).ifNull(),
+        isGraphQl: true,
+        isWebsocket: true,
+      ),
+      subProtocol: GraphQLProtocol.graphqlTransportWs);
+  if (authType == AuthType.basic && credentials.isNotBlank) {
+    final AuthLink authLink = AuthLink(getToken: () => credentials);
+    link = authLink.concat(link);
+  }
+  final loggerLink = LoggerLink();
+  return GraphQLClient(
+    link: loggerLink.concat(link),
+    defaultPolicies: DefaultPolicies(
+      query: Policies(fetch: FetchPolicy.noCache),
+    ),
+    cache: GraphQLCache(store: ref.watch(hiveStoreProvider)),
+  );
+}
+
+@riverpod
+ValueNotifier<GraphQLClient> graphQlClientNotifier(Ref ref) {
+  final notifier = ValueNotifier(ref.watch(graphQlClientProvider));
+  // Dispose of the notifier when the provider is destroyed
+  ref.onDispose(notifier.dispose);
+
+  // Notify listeners of this provider whenever the ValueNotifier updates.
+  notifier.addListener(ref.notifyListeners);
+
+  return notifier;
+}
+
+@riverpod
+class AuthTypeKey extends _$AuthTypeKey
+    with SharedPreferenceEnumClientMixin<AuthType> {
+  @override
+  AuthType? build() => initialize(
+        DBKeys.authType,
+        enumList: AuthType.values,
+      );
+}
+
+@riverpod
+class L10n extends _$L10n with SharedPreferenceClientMixin<Locale> {
+  Map<String, String> toJson(Locale locale) => {
+        if (locale.countryCode.isNotBlank) "countryCode": locale.countryCode!,
+        if (locale.languageCode.isNotBlank) "languageCode": locale.languageCode,
+        if (locale.scriptCode.isNotBlank) "scriptCode": locale.scriptCode!,
+      };
+  Locale? fromJson(dynamic json) =>
+      json is! Map<String, dynamic> || (json["languageCode"] == null)
+          ? null
+          : Locale.fromSubtags(
+              languageCode: json["languageCode"]!.toString(),
+              scriptCode: json["scriptCode"]?.toString(),
+              countryCode: json["countryCode"]?.toString(),
+            );
+  @override
+  Locale? build() => initialize(
+        DBKeys.l10n,
+        fromJson: fromJson,
+        toJson: toJson,
+      );
+}
+
+@riverpod
+SharedPreferences sharedPreferences(ref) => throw UnimplementedError();
+
+@riverpod
+HiveStore hiveStore(Ref ref) => throw UnimplementedError();
+
+@riverpod
+Queue rateLimitQueue(Ref ref, [String? query]) {
+  final queue = Queue(
+    parallel: 3,
+    delay: const Duration(milliseconds: 500),
+  );
+  ref.onDispose(() {
+    queue.cancel();
+  });
+  return queue;
+}

@@ -8,14 +8,15 @@ class TimeoutHttpClient extends http.BaseClient {
     this.timeout, {
     this.retries = 0,
     this.retryDelay = const Duration(seconds: 1),
-  });
+    http.Client? innerClient,
+  }) : _inner = innerClient ?? http.Client();
 
   /// The timeout duration for each request.
   final Duration timeout;
   final int retries;
   final Duration retryDelay;
 
-  final http.Client _inner = http.Client();
+  final http.Client _inner;
 
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
