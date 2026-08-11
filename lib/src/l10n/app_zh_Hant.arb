@@ -1216,5 +1216,13 @@
   "parallelSourceRequest": "並行來源請求數量",
   "@parallelSourceRequest": {
     "description": "Text for Parallel source requests property"
-  }
+  },
+  "readerModeDoubleHorizontalLTR": "雙頁（由左至右）",
+  "@readerModeDoubleHorizontalLTR": {},
+  "readerModeDoubleHorizontalRTL": "雙頁（由右至左）",
+  "@readerModeDoubleHorizontalRTL": {},
+  "readerDoublePageOffset": "錯開雙頁跨頁",
+  "@readerDoublePageOffset": {},
+  "readerDoublePageOffsetDescription": "首頁單獨顯示，後續頁面再兩兩配對",
+  "@readerDoublePageOffsetDescription": {}
 }
