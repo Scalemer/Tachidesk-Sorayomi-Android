@@ -28,7 +28,9 @@ enum ReaderMode {
   continuousHorizontalLTR,
   continuousHorizontalRTL,
   singleVertical,
-  webtoon;
+  webtoon,
+  doubleHorizontalLTR,
+  doubleHorizontalRTL;
 
   String toLocale(BuildContext context) => switch (this) {
         ReaderMode.defaultReader => context.l10n.readerModeDefaultReader,
@@ -43,7 +45,11 @@ enum ReaderMode {
         ReaderMode.continuousHorizontalRTL =>
           context.l10n.readerModeContinuousHorizontalRTL,
         ReaderMode.singleVertical => context.l10n.readerModeSingleVertical,
-        ReaderMode.webtoon => context.l10n.readerModeWebtoon
+        ReaderMode.webtoon => context.l10n.readerModeWebtoon,
+        ReaderMode.doubleHorizontalLTR =>
+          context.l10n.readerModeDoubleHorizontalLTR,
+        ReaderMode.doubleHorizontalRTL =>
+          context.l10n.readerModeDoubleHorizontalRTL,
       };
 }
 

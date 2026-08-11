@@ -1328,5 +1328,21 @@
     "autoRefreshOnTimeoutDescription": "Automatically retries requests that timeout",
     "autoRefreshRetryDelay": "Auto-refresh Retry Delay",
     "@autoRefreshRetryDelay": {"description": "Delay between auto retry attempts in seconds"},
-    "autoRefreshRetryDelayDescription": "Delay between auto retry attempts (in seconds)"
+    "autoRefreshRetryDelayDescription": "Delay between auto retry attempts (in seconds)",
+    "readerModeDoubleHorizontalLTR": "Double Page (LTR)",
+    "@readerModeDoubleHorizontalLTR": {
+        "description": "Radio button text for Reader Mode Type - Double Page (LTR)"
+    },
+    "readerModeDoubleHorizontalRTL": "Double Page (RTL)",
+    "@readerModeDoubleHorizontalRTL": {
+        "description": "Radio button text for Reader Mode Type - Double Page (RTL)"
+    },
+    "readerDoublePageOffset": "Offset double-page spreads",
+    "@readerDoublePageOffset": {
+        "description": "Switch title to display the first page alone in double-page mode"
+    },
+    "readerDoublePageOffsetDescription": "Display the first page alone, then pair following pages",
+    "@readerDoublePageOffsetDescription": {
+        "description": "Description for the double-page spread offset switch"
+    }
 }

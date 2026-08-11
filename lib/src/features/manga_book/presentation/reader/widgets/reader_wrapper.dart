@@ -24,6 +24,7 @@ import '../../../../../utils/extensions/custom_extensions.dart';
 import '../../../../../utils/launch_url_in_web.dart';
 import '../../../../../utils/misc/toast/toast.dart';
 import '../../../../../widgets/popup_widgets/radio_list_popup.dart';
+import '../../../../settings/presentation/reader/widgets/reader_double_page_offset_tile/reader_double_page_offset_tile.dart';
 import '../../../../settings/presentation/reader/widgets/reader_initial_overlay_tile/reader_initial_overlay_tile.dart';
 import '../../../../settings/presentation/reader/widgets/reader_invert_tap_tile/reader_invert_tap_tile.dart';
 import '../../../../settings/presentation/reader/widgets/reader_last_page_swipe_tile/reader_last_page_swipe_tile.dart';
@@ -60,6 +61,7 @@ class ReaderWrapper extends HookConsumerWidget {
     this.showReaderLayoutAnimation = false,
     required this.chapterPages,
     this.pageController,
+    this.pageIndexMapper,
   });
   final Widget child;
   final MangaDto manga;
@@ -72,6 +74,7 @@ class ReaderWrapper extends HookConsumerWidget {
   final bool showReaderLayoutAnimation;
   final ChapterPagesDto chapterPages;
   final PageController? pageController;
+  final int Function(int pageViewIndex)? pageIndexMapper;
 
   /// Determine transition direction based on reading mode for proper animations
   /// Returns true for vertical transitions, false for horizontal transitions
@@ -89,6 +92,8 @@ class ReaderWrapper extends HookConsumerWidget {
       case ReaderMode.continuousHorizontalLTR:
       case ReaderMode.singleHorizontalRTL:
       case ReaderMode.continuousHorizontalRTL:
+      case ReaderMode.doubleHorizontalLTR:
+      case ReaderMode.doubleHorizontalRTL:
         return false;
 
       // Default case - use horizontal transition as fallback
@@ -104,11 +109,13 @@ class ReaderWrapper extends HookConsumerWidget {
       // RTL modes
       case ReaderMode.singleHorizontalRTL:
       case ReaderMode.continuousHorizontalRTL:
+      case ReaderMode.doubleHorizontalRTL:
         return true;
 
       // LTR and Vertical modes
       case ReaderMode.singleHorizontalLTR:
       case ReaderMode.continuousHorizontalLTR:
+      case ReaderMode.doubleHorizontalLTR:
       case ReaderMode.singleVertical:
       case ReaderMode.continuousVertical:
       case ReaderMode.webtoon:
@@ -378,6 +385,9 @@ class ReaderWrapper extends HookConsumerWidget {
                 leading: const Icon(Icons.close_rounded),
                 onTap: context.pop,
               ),
+              if (resolvedReaderMode == ReaderMode.doubleHorizontalLTR ||
+                  resolvedReaderMode == ReaderMode.doubleHorizontalRTL)
+                const ReaderDoublePageOffsetTile(),
               ListTile(
                 style: ListTileStyle.drawer,
                 leading: const Icon(Icons.app_settings_alt_outlined),
@@ -583,14 +593,13 @@ class ReaderWrapper extends HookConsumerWidget {
                     chapterPages: chapterPages,
                     showReaderLayoutAnimation: showReaderLayoutAnimation,
                     pageController: pageController,
+                    pageIndexMapper: pageIndexMapper,
                     child: _buildEnhancedChildWithPageDetection(
                       child,
                       lastPageSwipeEnabled,
                       readerSwipeChapterToggle,
                       onNextChapter,
                       onPreviousChapter,
-                      resolvedReaderMode,
-                      scrollDirection,
                     ),
                   ),
                 ),
@@ -609,8 +618,6 @@ class ReaderWrapper extends HookConsumerWidget {
     bool readerSwipeChapterToggle,
     VoidCallback onNextChapter,
     VoidCallback onPreviousChapter,
-    ReaderMode resolvedReaderMode,
-    Axis scrollDirection,
   ) {
     if (!lastPageSwipeEnabled || readerSwipeChapterToggle) {
       return originalChild;
@@ -618,11 +625,8 @@ class ReaderWrapper extends HookConsumerWidget {
 
     return _PageViewEnhancer(
       originalChild: originalChild,
-      chapterPages: chapterPages,
       onNextChapter: onNextChapter,
       onPreviousChapter: onPreviousChapter,
-      resolvedReaderMode: resolvedReaderMode,
-      scrollDirection: scrollDirection,
       lastPageSwipeEnabled: lastPageSwipeEnabled,
     );
   }
@@ -632,20 +636,14 @@ class ReaderWrapper extends HookConsumerWidget {
 class _PageViewEnhancer extends StatefulWidget {
   const _PageViewEnhancer({
     required this.originalChild,
-    required this.chapterPages,
     required this.onNextChapter,
     required this.onPreviousChapter,
-    required this.resolvedReaderMode,
-    required this.scrollDirection,
     required this.lastPageSwipeEnabled,
   });
 
   final Widget originalChild;
-  final ChapterPagesDto chapterPages;
   final VoidCallback onNextChapter;
   final VoidCallback onPreviousChapter;
-  final ReaderMode resolvedReaderMode;
-  final Axis scrollDirection;
   final bool lastPageSwipeEnabled;
 
   @override
@@ -706,11 +704,8 @@ class _PageViewEnhancerState extends State<_PageViewEnhancer> {
     // Handle both PageMetrics (for PageView) and general ScrollMetrics (for Webtoon)
     if (metrics is PageMetrics) {
       // PageView-based readers (horizontal modes)
-      final currentPage = metrics.page?.round() ?? 0;
-      final totalPages = widget.chapterPages.pages.length;
-
-      final bool atLastPage = currentPage >= (totalPages - 1);
-      final bool atFirstPage = currentPage <= 0;
+      final bool atLastPage = metrics.pixels >= metrics.maxScrollExtent;
+      final bool atFirstPage = metrics.pixels <= metrics.minScrollExtent;
 
       // Trigger immediately when user drags past edge more than 10 logical pixels
       const double kOverscrollThreshold = 10.0;
@@ -845,6 +840,7 @@ class ReaderView extends HookWidget {
     required this.child,
     this.showReaderLayoutAnimation = false,
     this.pageController,
+    this.pageIndexMapper,
   });
 
   final VoidCallback toggleVisibility;
@@ -864,6 +860,7 @@ class ReaderView extends HookWidget {
   final bool showReaderLayoutAnimation;
   final Widget child;
   final PageController? pageController;
+  final int Function(int pageViewIndex)? pageIndexMapper;
 
   /// Gesture handling extracted for better performance and maintainability.
   /// This widget focuses on:
@@ -919,6 +916,7 @@ class ReaderView extends HookWidget {
       onNextPage: onNext,
       onPreviousPage: onPrevious,
       pageController: controller,
+      pageIndexMapper: pageIndexMapper,
       child: content,
     );
 

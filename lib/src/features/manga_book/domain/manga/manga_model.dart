@@ -46,7 +46,11 @@ class MangaMeta with _$MangaMeta {
     bool? invertTap,
     @JsonKey(name: "flutter_readerNavigationLayout")
     ReaderNavigationLayout? readerNavigationLayout,
-    @JsonKey(name: "flutter_readerMode") ReaderMode? readerMode,
+    @JsonKey(
+      name: "flutter_readerMode",
+      unknownEnumValue: ReaderMode.defaultReader,
+    )
+    ReaderMode? readerMode,
     @JsonKey(
       name: "flutter_readerPadding",
       fromJson: MangaMeta.fromJsonToDouble,

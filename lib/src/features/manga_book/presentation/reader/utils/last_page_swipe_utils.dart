@@ -41,10 +41,12 @@ class LastPageSwipeUtils {
     switch (mode) {
       case ReaderMode.singleHorizontalLTR:
       case ReaderMode.continuousHorizontalLTR:
+      case ReaderMode.doubleHorizontalLTR:
         return SwipeDirection.left; // LTR: swipe left for next
 
       case ReaderMode.singleHorizontalRTL:
       case ReaderMode.continuousHorizontalRTL:
+      case ReaderMode.doubleHorizontalRTL:
         return SwipeDirection.right; // RTL: swipe right for next
 
       case ReaderMode.singleVertical:

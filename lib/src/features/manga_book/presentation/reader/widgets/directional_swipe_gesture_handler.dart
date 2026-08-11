@@ -34,6 +34,7 @@ class DirectionalSwipeGestureHandler extends HookWidget {
     required this.onNextPage,
     required this.onPreviousPage,
     required this.pageController,
+    this.pageIndexMapper,
   });
 
   final Widget child;
@@ -52,6 +53,7 @@ class DirectionalSwipeGestureHandler extends HookWidget {
   final VoidCallback onNextPage;
   final VoidCallback onPreviousPage;
   final PageController? pageController;
+  final int Function(int pageViewIndex)? pageIndexMapper;
 
   @override
   Widget build(BuildContext context) {
@@ -131,7 +133,10 @@ class DirectionalSwipeGestureHandler extends HookWidget {
     if (!lastPageSwipeEnabled) {
       return;
     }
-    final realTimePageIndex = pageController?.page?.round() ?? currentIndex;
+    final pageViewIndex = pageController?.page?.round();
+    final realTimePageIndex = pageViewIndex == null
+        ? currentIndex
+        : pageIndexMapper?.call(pageViewIndex) ?? pageViewIndex;
 
     final pagePosition = LastPageSwipeUtils.detectPagePosition(
       currentIndex: realTimePageIndex,
@@ -268,15 +273,12 @@ class DirectionalSwipeGestureHandler extends HookWidget {
 
   /// Perform appropriate page navigation based on direction
   void _performPageNavigation(SwipeDirection direction) {
-    switch (direction) {
-      case SwipeDirection.left:
-      case SwipeDirection.up:
-        onNextPage();
-        break;
-      case SwipeDirection.right:
-      case SwipeDirection.down:
-        onPreviousPage();
-        break;
+    final expectedDirection =
+        LastPageSwipeUtils.getExpectedSwipeDirection(resolvedReaderMode);
+    if (direction == expectedDirection) {
+      onNextPage();
+    } else if (_isOppositeDirection(direction, expectedDirection)) {
+      onPreviousPage();
     }
   }
 

@@ -1372,5 +1372,13 @@
   "searchingAllSources": "正在搜索所有可用来源...",
   "@searchingAllSources": {},
   "noMatchingMangaFound": "在任何来源中未找到匹配的漫画",
-  "@noMatchingMangaFound": {}
+  "@noMatchingMangaFound": {},
+  "readerModeDoubleHorizontalLTR": "双页（从左到右）",
+  "@readerModeDoubleHorizontalLTR": {},
+  "readerModeDoubleHorizontalRTL": "双页（从右到左）",
+  "@readerModeDoubleHorizontalRTL": {},
+  "readerDoublePageOffset": "错开双页跨页",
+  "@readerDoublePageOffset": {},
+  "readerDoublePageOffsetDescription": "首页单独显示，后续页面再两两配对",
+  "@readerDoublePageOffsetDescription": {}
 }

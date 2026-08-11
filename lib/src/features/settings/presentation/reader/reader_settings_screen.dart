@@ -12,6 +12,7 @@ import 'package:gap/gap.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../utils/extensions/custom_extensions.dart';
+import 'widgets/reader_double_page_offset_tile/reader_double_page_offset_tile.dart';
 import 'widgets/reader_ignore_safe_area_tile/reader_ignore_safe_area_tile.dart';
 import 'widgets/reader_initial_overlay_tile/reader_initial_overlay_tile.dart';
 import 'widgets/reader_invert_tap_tile/reader_invert_tap_tile.dart';
@@ -37,6 +38,7 @@ class ReaderSettingsScreen extends ConsumerWidget {
       body: ListView(
         children: [
           const ReaderModeTile(),
+          const ReaderDoublePageOffsetTile(),
           const ReaderNavigationLayoutTile(),
           const ReaderInvertTapTile(),
           const ReaderInitialOverlayTile(),

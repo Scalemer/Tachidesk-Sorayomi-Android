@@ -33,6 +33,8 @@ class ServerImage extends HookConsumerWidget {
     this.progressIndicatorBuilder,
     this.wrapper,
     this.showReloadButton = false,
+    this.alignment = Alignment.center,
+    this.onImageLoaded,
   });
 
   final String imageUrl;
@@ -43,6 +45,8 @@ class ServerImage extends HookConsumerWidget {
       progressIndicatorBuilder;
   final Widget Function(Widget child)? wrapper;
   final bool showReloadButton;
+  final Alignment alignment;
+  final ValueChanged<Size>? onImageLoaded;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -125,11 +129,113 @@ class ServerImage extends HookConsumerWidget {
       httpHeaders: httpHeaders,
       width: size?.width,
       fit: fit ?? BoxFit.cover,
+      alignment: alignment,
       imageRenderMethodForWeb: renderMethod,
+      imageBuilder: onImageLoaded == null
+          ? null
+          : (context, imageProvider) => _SizeReportingImage(
+                imageProvider: imageProvider,
+                height: size?.height,
+                width: size?.width,
+                fit: fit ?? BoxFit.cover,
+                alignment: alignment,
+                onImageLoaded: onImageLoaded!,
+              ),
       progressIndicatorBuilder: finalProgressIndicatorBuilder,
       errorWidget: errorWidget,
     );
   }
+}
+
+class _SizeReportingImage extends StatefulWidget {
+  const _SizeReportingImage({
+    required this.imageProvider,
+    required this.fit,
+    required this.alignment,
+    required this.onImageLoaded,
+    this.height,
+    this.width,
+  });
+
+  final ImageProvider<Object> imageProvider;
+  final double? height;
+  final double? width;
+  final BoxFit fit;
+  final Alignment alignment;
+  final ValueChanged<Size> onImageLoaded;
+
+  @override
+  State<_SizeReportingImage> createState() => _SizeReportingImageState();
+}
+
+class _SizeReportingImageState extends State<_SizeReportingImage> {
+  ImageStream? _imageStream;
+  ImageStreamListener? _imageStreamListener;
+  Size? _reportedSize;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _resolveImage();
+  }
+
+  @override
+  void didUpdateWidget(covariant _SizeReportingImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.imageProvider != widget.imageProvider) {
+      _reportedSize = null;
+      _resolveImage();
+    }
+  }
+
+  void _resolveImage() {
+    final imageStream = widget.imageProvider.resolve(
+      createLocalImageConfiguration(
+        context,
+        size: widget.width != null && widget.height != null
+            ? Size(widget.width!, widget.height!)
+            : null,
+      ),
+    );
+    if (_imageStream?.key == imageStream.key) return;
+
+    _removeImageStreamListener();
+    _imageStream = imageStream;
+    _imageStreamListener = ImageStreamListener((imageInfo, _) {
+      final imageSize = Size(
+        imageInfo.image.width.toDouble(),
+        imageInfo.image.height.toDouble(),
+      );
+      if (_reportedSize == imageSize) return;
+      _reportedSize = imageSize;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.onImageLoaded(imageSize);
+      });
+    });
+    _imageStream!.addListener(_imageStreamListener!);
+  }
+
+  void _removeImageStreamListener() {
+    final listener = _imageStreamListener;
+    if (listener != null) _imageStream?.removeListener(listener);
+    _imageStreamListener = null;
+  }
+
+  @override
+  void dispose() {
+    _removeImageStreamListener();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Image(
+        image: widget.imageProvider,
+        height: widget.height,
+        width: widget.width,
+        fit: widget.fit,
+        alignment: widget.alignment,
+        gaplessPlayback: true,
+      );
 }
 
 class ServerImageWithCpi extends StatelessWidget {

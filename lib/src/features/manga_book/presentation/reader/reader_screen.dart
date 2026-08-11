@@ -14,6 +14,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../constants/enum.dart';
 import '../../../../utils/extensions/custom_extensions.dart';
 import '../../../history/presentation/history_controller.dart';
+import '../../../settings/presentation/reader/widgets/reader_double_page_offset_tile/reader_double_page_offset_tile.dart';
 import '../../../settings/presentation/reader/widgets/reader_ignore_safe_area_tile/reader_ignore_safe_area_tile.dart';
 import '../../../settings/presentation/reader/widgets/reader_mode_tile/reader_mode_tile.dart';
 import '../../data/manga_book/manga_book_repository.dart';
@@ -22,6 +23,7 @@ import '../../domain/manga/manga_model.dart';
 import '../manga_details/controller/manga_details_controller.dart';
 import 'controller/reader_controller.dart';
 import 'widgets/reader_mode/continuous_reader_mode.dart';
+import 'widgets/reader_mode/double_page_reader_mode.dart';
 import 'widgets/reader_mode/single_page_reader_mode.dart';
 
 class ReaderScreen extends HookConsumerWidget {
@@ -42,6 +44,7 @@ class ReaderScreen extends HookConsumerWidget {
     final manga = ref.watch(mangaProvider);
     final chapter = ref.watch(chapterProviderWithIndex);
     final defaultReaderMode = ref.watch(readerModeKeyProvider);
+    final doublePageOffset = ref.watch(readerDoublePageOffsetProvider).ifNull();
     final ignoreSafeArea = ref.watch(readerIgnoreSafeAreaProvider).ifNull();
 
     final debounce = useRef<Timer?>(null);
@@ -78,15 +81,17 @@ class ReaderScreen extends HookConsumerWidget {
         final chapterPagesValue = chapterPages.valueOrNull;
         if (chapterValue == null || chapterPagesValue == null) return;
 
-        // Skip if chapter is already read or if we're going backwards
-        if ((chapterValue.isRead).ifNull() ||
-            (chapterValue.lastPageRead).getValueOnNullOrNegative() >= index) {
-          return;
-        }
-
         final finalDebounce = debounce.value;
         if ((finalDebounce?.isActive).ifNull()) {
           finalDebounce?.cancel();
+        }
+
+        // Skip if chapter is already read or if we're going backwards. Cancel
+        // pending progress first so it cannot mark a page that is no longer
+        // visible after navigation or a dynamic double-spread reflow.
+        if ((chapterValue.isRead).ifNull() ||
+            (chapterValue.lastPageRead).getValueOnNullOrNegative() >= index) {
+          return;
         }
 
         // Use actual loaded pages count instead of chapter metadata
@@ -188,6 +193,26 @@ class ReaderScreen extends HookConsumerWidget {
                             onPageChanged: onPageChanged,
                             chapterPages: chapterPagesData,
                           ),
+                        ReaderMode.doubleHorizontalLTR => DoublePageReaderMode(
+                            chapter: chapterData,
+                            manga: data,
+                            onPageChanged: onPageChanged,
+                            reverse: false,
+                            offsetFirstPage: doublePageOffset,
+                            showReaderLayoutAnimation:
+                                showReaderLayoutAnimation,
+                            chapterPages: chapterPagesData,
+                          ),
+                        ReaderMode.doubleHorizontalRTL => DoublePageReaderMode(
+                            chapter: chapterData,
+                            manga: data,
+                            onPageChanged: onPageChanged,
+                            reverse: true,
+                            offsetFirstPage: doublePageOffset,
+                            showReaderLayoutAnimation:
+                                showReaderLayoutAnimation,
+                            chapterPages: chapterPagesData,
+                          ),
                         ReaderMode.continuousVertical => ContinuousReaderMode(
                             chapter: chapterData,
                             manga: data,
@@ -220,6 +245,28 @@ class ReaderScreen extends HookConsumerWidget {
                                 manga: data,
                                 onPageChanged: onPageChanged,
                                 reverse: true,
+                                showReaderLayoutAnimation:
+                                    showReaderLayoutAnimation,
+                                chapterPages: chapterPagesData,
+                              ),
+                            ReaderMode.doubleHorizontalLTR =>
+                              DoublePageReaderMode(
+                                chapter: chapterData,
+                                manga: data,
+                                onPageChanged: onPageChanged,
+                                reverse: false,
+                                offsetFirstPage: doublePageOffset,
+                                showReaderLayoutAnimation:
+                                    showReaderLayoutAnimation,
+                                chapterPages: chapterPagesData,
+                              ),
+                            ReaderMode.doubleHorizontalRTL =>
+                              DoublePageReaderMode(
+                                chapter: chapterData,
+                                manga: data,
+                                onPageChanged: onPageChanged,
+                                reverse: true,
+                                offsetFirstPage: doublePageOffset,
                                 showReaderLayoutAnimation:
                                     showReaderLayoutAnimation,
                                 chapterPages: chapterPagesData,
